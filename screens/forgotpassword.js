@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient'; // Gradient
+import { LinearGradient } from 'expo-linear-gradient';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
 
-  // Handle Forgot Password logic
+
   const handleForgotPassword = () => {
     const normalizedEmail = email.trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

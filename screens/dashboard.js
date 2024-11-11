@@ -82,7 +82,6 @@ const Dashboard = ({ navigation }) => {
 
           <View style={styles.infoContainer}>
             {attendanceData ? (
-              // Render all filtered attendance entries based on user 'id'
               attendanceData.map((entry, index) => (
                 <View key={index} style={styles.timeContainer}>
                   <Text style={styles.infoText}>Employee: {entry.employee.full_name || "N/A"}</Text>

@@ -12,7 +12,6 @@ const NotificationDashboard = ({ navigation }) => {
   const API_URL = "http://192.168.100.154:8000/api/payroll/";
 
   useEffect(() => {
-    // Retrieve the logged-in user data from AsyncStorage
     AsyncStorage.getItem('userData')
       .then((userData) => {
         if (userData) {
@@ -20,14 +19,14 @@ const NotificationDashboard = ({ navigation }) => {
           const token = parsedUserData.token;
           const fullName = `${parsedUserData.first_name} ${parsedUserData.last_name}`;
 
-          // Ensure the token exists
+          
           if (token) {
-            setUserName(fullName);  // Store the user's full name
+            setUserName(fullName); 
 
-            // Fetch payroll data
+           
             axios.get(API_URL, {
               headers: {
-                Authorization: `Token ${token}`, // Add the token here
+                Authorization: `Token ${token}`, 
               },
             })
               .then((response) => {
@@ -38,8 +37,6 @@ const NotificationDashboard = ({ navigation }) => {
                 if (payrollNotifications.length > 0) {
                   setNotifications(payrollNotifications);
                 }
-
-                // Update loading state
                 setLoading(false);
               })
               .catch((error) => {
@@ -65,7 +62,7 @@ const NotificationDashboard = ({ navigation }) => {
       "PAYDAY",
       `Payday na!, Wag kang magsashabu`, 
       [
-        { text: "OK", onPress: () => handleDeleteNotification(notification.id) } // When OK is pressed, delete the notification
+        { text: "OK", onPress: () => handleDeleteNotification(notification.id) }
       ]
     );
   };

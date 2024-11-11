@@ -4,8 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 function BeginScreen({ navigation }) {
   const handlePress = () => {
-    // Navigate to another screen (e.g., LoginScreen or Dashboard)
-    navigation.navigate('Login'); // Change 'Login' to the screen you want to navigate to
+    navigation.navigate('Login');
   };
 
   return (
