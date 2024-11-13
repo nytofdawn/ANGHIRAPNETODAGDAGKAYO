@@ -8,6 +8,7 @@ import profilescreen from './screens/profile';
 import NotificationScreen from './screens/notification';
 import ForgotPasswordScreen from './screens/forgotpassword';
 import BeginScreen from './screens/beginscreen';
+import HistoryScreen from './screens/history';
 
 
 const Stack = createStackNavigator();
@@ -49,6 +50,7 @@ const App = () => {
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
           <Stack.Screen name="Notifications" component={NotificationScreen} />
           <Stack.Screen name="Profile" component={profilescreen} />
+          <Stack.Screen name="History" component={HistoryScreen} />
         </Stack.Navigator>
       </NavigationContainer>
   );

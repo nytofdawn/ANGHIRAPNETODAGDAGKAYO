@@ -7,94 +7,117 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const NotificationDashboard = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState([]);  // Combined state for all notifications
   const [userName, setUserName] = useState("");
-  const API_URL = "http://192.168.100.154:8000/api/payroll/";
+  const API_URL = "http://192.168.1.42:8000/api/payroll/";
 
   useEffect(() => {
-    AsyncStorage.getItem('userData')
-      .then((userData) => {
+    const fetchNotifications = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('userData');
         if (userData) {
           const parsedUserData = JSON.parse(userData);
           const token = parsedUserData.token;
           const fullName = `${parsedUserData.first_name} ${parsedUserData.last_name}`;
 
-          
           if (token) {
-            setUserName(fullName); 
+            setUserName(fullName);
 
-           
-            axios.get(API_URL, {
+            // Fetch payroll notifications from the API
+            const response = await axios.get(API_URL, {
               headers: {
-                Authorization: `Token ${token}`, 
+                Authorization: `Token ${token}`,
               },
-            })
-              .then((response) => {
-                const payrollNotifications = response.data.filter((item) => {
-                  return item.employee.full_name === fullName;
-                });
+            });
 
-                if (payrollNotifications.length > 0) {
-                  setNotifications(payrollNotifications);
-                }
-                setLoading(false);
-              })
-              .catch((error) => {
-                console.error("Error fetching payroll data:", error);
-                setLoading(false);
-              });
+            console.log("API Response: ", response.data); // Check structure of the response
+
+            // Filter payroll notifications for the logged-in user
+            const payrollNotifications = response.data.filter(item => item.employee.full_name === fullName);
+            setNotifications(payrollNotifications);
           } else {
             console.error("No token found in AsyncStorage");
-            setLoading(false);
           }
-        } else {
-          setLoading(false);
         }
-      })
-      .catch((error) => {
-        console.error("Error retrieving user data from AsyncStorage:", error);
+      } catch (error) {
+        console.error("Error retrieving data:", error);
+        Alert.alert("Error", "Failed to load notifications.");
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchNotifications();
   }, []);
 
-  const handleNotificationPress = (notification) => {
+  const handleNotificationPress = async (notification) => {
+    const netSalary = notification.net_salary && !isNaN(notification.net_salary) ? parseFloat(notification.net_salary) : 0;
+
+    // Mark notification as read (moving to "old" notifications)
+    setNotifications(prevNotifications =>
+      prevNotifications.map(item =>
+        item.id === notification.id ? { ...item, is_read: true } : item
+      )
+    );
+
+    // Send request to mark the notification as read on the backend
+    try {
+      const userData = await AsyncStorage.getItem('userData');
+      if (userData) {
+        const parsedUserData = JSON.parse(userData);
+        const token = parsedUserData.token;
+
+        if (token) {
+          await axios.patch(
+            `http://192.168.1.42:8000/api/payroll/${notification.id}/`,
+            { is_read: true },
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
+            }
+          );
+          console.log("Notification marked as read:", notification.id);
+        }
+      }
+    } catch (error) {
+      console.error("Error marking payroll as read:", error);
+      Alert.alert("Error", "Failed to update notification status. Please try again later.");
+    }
+
+    // Display payday alert
     Alert.alert(
       "PAYDAY",
-      `Payday na!, Wag kang magsashabu`, 
-      [
-        { text: "OK", onPress: () => handleDeleteNotification(notification.id) }
-      ]
+      `Payday na! Your net salary is ₱${netSalary.toFixed(2)}. Don't forget to manage your finances!`
     );
   };
 
-  const handleDeleteNotification = (notificationId) => {
-    AsyncStorage.getItem('userData')
-      .then((userData) => {
-        if (userData) {
-          const parsedUserData = JSON.parse(userData);
-          const token = parsedUserData.token;
-          if (token) {
-            axios.delete(`${API_URL}${notificationId}/`, {
-              headers: {
-                Authorization: `Token ${token}`,
-              }
-            })
-              .then((response) => {
-                setNotifications(prevNotifications => prevNotifications.filter(notification => notification.id !== notificationId));
-              })
-              .catch((error) => {
-                console.error("Error deleting notification:", error);
-                Alert.alert("Error", "Failed to delete the notification.");
-              });
-          } else {
-            console.error("Token is missing when trying to delete notification");
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("Error retrieving user data from AsyncStorage:", error);
-        Alert.alert("Error", "Failed to retrieve user data.");
-      });
+  // Function to save the clicked old notification to AsyncStorage as PayHistory
+  const handleOldNotificationPress = async (notification) => {
+    try {
+      const currentDate = new Date().toLocaleString(); // Get the current date in a readable format
+
+      // Create an object to store the notification along with the current date
+      const notificationWithDate = {
+        ...notification,
+        dateSaved: currentDate,
+      };
+
+      // Retrieve existing PayHistory from AsyncStorage
+      const payHistoryData = await AsyncStorage.getItem('PayHistory');
+      const payHistory = payHistoryData ? JSON.parse(payHistoryData) : [];
+
+      // Add the clicked notification with date to the PayHistory array
+      const updatedPayHistory = [...payHistory, notificationWithDate];
+
+      // Save updated PayHistory back to AsyncStorage
+      await AsyncStorage.setItem('PayHistory', JSON.stringify(updatedPayHistory));
+
+      Alert.alert("Success", "Notification saved to PayHistory.");
+    } catch (error) {
+      console.error("Error saving to PayHistory:", error);
+      Alert.alert("Error", "Failed to save notification to PayHistory.");
+    }
   };
 
   if (loading) {
@@ -118,21 +141,49 @@ const NotificationDashboard = ({ navigation }) => {
         <View style={styles.contentContainer}>
           <Text style={styles.text}>PAYDAY</Text>
 
-          {notifications && notifications.length > 0 ? (
-            notifications.map((notification, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.notificationCard}
-                onPress={() => handleNotificationPress(notification)}
-              >
-                <Text style={styles.notificationText}>
-                  {notification.message || `Payroll for ${notification.employee.full_name} is available.`}
-                </Text>
-              </TouchableOpacity>
-            ))
+          {notifications.length > 0 ? (
+            <View style={styles.newNotificationsContainer}>
+              {notifications.filter(notification => !notification.is_read).map((notification, index) => {
+                const netSalary = notification.net_salary && !isNaN(notification.net_salary) ? parseFloat(notification.net_salary) : 0;
+
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.notificationCard}
+                    onPress={() => handleNotificationPress(notification)}
+                  >
+                    <Text style={styles.notificationText}>
+                      {notification.message || `Payroll for ${notification.employee.full_name} is available. Net Salary: ₱${netSalary.toFixed(2)}`}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           ) : (
             <Text>No new payroll notifications available.</Text>
           )}
+
+          <View style={styles.oldNotificationsContainer}>
+            <Text style={styles.oldText}>Old Notifications</Text>
+            {notifications.filter(notification => notification.is_read).length > 0 ? (
+              notifications.filter(notification => notification.is_read).map((notification, index) => {
+                const netSalary = notification.net_salary && !isNaN(notification.net_salary) ? parseFloat(notification.net_salary) : 0;
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.notificationCard}
+                    onPress={() => handleOldNotificationPress(notification)}
+                  >
+                    <Text style={styles.notificationText}>
+                      {notification.message || `Payroll for ${notification.employee.full_name} was processed. with ₱${netSalary.toFixed(2)}`}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
+            ) : (
+              <Text>No old notifications available.</Text>
+            )}
+          </View>
         </View>
       </LinearGradient>
     </Layout>
@@ -170,8 +221,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontWeight: 'bold',
   },
-  notificationContainer: {
+  newNotificationsContainer: {
     marginBottom: 20,
+  },
+  oldNotificationsContainer: {
+    marginTop: 20,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+  oldText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
   },
   notificationCard: {
     backgroundColor: '#f5f5f5',

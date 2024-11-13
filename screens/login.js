@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { Text, TextInput, Button, StyleSheet, Alert, Image,View } from 'react-native';
 import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,31 +13,53 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert('Error', 'Please enter both Employee ID and Password');
       return;
     }
+  
     try {
-      const response = await axios.post('http://192.168.100.154:8000/api/login/', {
+      const response = await axios.post('http://192.168.1.42:8000/api/login/', {
         employee_number: employeeId,
         password: password,
       });
+  
       if (response.status === 200) {
-        await AsyncStorage.setItem('userData', JSON.stringify(response.data));
+        const { employee_number, first_name, last_name, token, username } = response.data;
+  
+        // Save the user data in AsyncStorage
+        const userData = {
+          employee_number,
+          first_name,
+          last_name,
+          token,
+          username,
+        };
+        await AsyncStorage.setItem('userData', JSON.stringify(userData));
   
         Alert.alert('Login Successful', 'Welcome to the Dashboard!', [
-          { text: 'OK', onPress: () => navigation.navigate('Dashboard') }
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Dashboard'),
+          },
         ]);
+  
         console.log('Login successful:', response.data);
       } else if (response.status === 401) {
         Alert.alert('Login Failed', 'Invalid employee number or password', [
-          { text: 'Try Again' }
+          { text: 'Try Again' },
         ]);
         console.log('Login failed: Invalid credentials');
       } else {
         Alert.alert('Error', 'Something went wrong. Please try again later.');
+        console.log('Unexpected status code:', response.status);
       }
     } catch (error) {
+      // Handle network or server errors
       if (error.response) {
-        Alert.alert('Error', 'Check your credentials, or internet connection');
+        // Server error
+        Alert.alert('Error', 'Check your credentials or internet connection');
+        console.error('Error response:', error.response);
       } else {
+        // Network error
         Alert.alert('Network Error', 'There was an issue connecting. Please check your internet connection.');
+        console.error('Network error:', error);
       }
     }
   };
@@ -48,7 +70,17 @@ const LoginScreen = ({ navigation }) => {
       colors={['#FFA500', '#FF4500']}
       style={styles.container}
     >
-      <Text style={styles.title}>Login</Text>
+      <LinearGradient
+        colors={[ '#FFA500','#FF4500']}
+        style={styles.LogoCon}
+      >
+      <Image
+            source={require('./logo/qpl.png')}
+            style={styles.image}
+          />
+          </LinearGradient>
+      <Text style={styles.titleL}>Login</Text>
+      
 
       <LinearGradient
         colors={['#FF4500', '#FFA500']}
@@ -83,8 +115,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 20,
+    justifyContent:'space-around',
   },
   title: {
     fontSize: 30,
@@ -126,6 +157,21 @@ const styles = StyleSheet.create({
     color: 'blue',
     textDecorationLine: 'underline',
   },
+  image:{
+    width: 300,   // Adjust the size of the image
+    height: 300,  // Adjust the size of the image
+    resizeMode: 'contain'
+  },
+  LogoCon:{
+    borderBottomLeftRadius: 80,
+    borderBottomRightRadius:80,
+  },
+  titleL:{
+    textAlign:'center',
+    fontWeight:'bold',
+    fontSize:40,
+    color:'white',
+  }
 });
 
 export default LoginScreen;

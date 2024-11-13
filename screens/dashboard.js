@@ -7,58 +7,59 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const Dashboard = ({ navigation }) => {
   const [attendanceData, setAttendanceData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const storedUserData = await AsyncStorage.getItem('userData');
+        if (storedUserData) setUserData(JSON.parse(storedUserData));
+      } catch (error) {
+        console.error("Error retrieving user data from AsyncStorage:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    if (!userData?.token) return setLoading(false);
+
     const fetchAttendanceData = async () => {
       try {
-        // Fetch user data from AsyncStorage to retrieve the user's id
-        const userData = await AsyncStorage.getItem('userData');
-        if (!userData) {
-          console.error("No user data found");
-          return;
-        }
-  
-        const parsedData = JSON.parse(userData);
-        const userId = parsedData.employee_number;  
-  
-        const token = parsedData.token;
-  
-        const response = await fetch(`http://192.168.100.154:8000/api/attendance/`, {
+        const response = await fetch(`http://192.168.1.42:8000/api/attendance/`, {
           method: 'GET',
-          headers: {
-            'Authorization': `Token ${token}`,
-          },
+          headers: { 'Authorization': `Token ${userData.token}` },
         });
-  
-        if (!response.ok) {
-          console.error("Error fetching attendance data:", response.statusText);
-          return;
-        }
-  
+
+        if (!response.ok) return setLoading(false);
+
         const data = await response.json();
-  
-        const filteredData = data.filter((attendanceEntry) => {
-          return String(attendanceEntry.employee.id_number) === String(userId);
-        });
-  
-  
-        if (filteredData.length === 0) {
-          setAttendanceData(null);
-        } else {
-          setAttendanceData(filteredData);
-          await AsyncStorage.setItem('attendanceData', JSON.stringify(filteredData));
-        }
+        const filteredData = data.filter((entry) => String(entry.employee.id_number) === String(userData.employee_number));
+
+        // Count attendance duplicates
+        const attendanceCount = filteredData.reduce((acc, entry) => {
+          const name = entry.employee.full_name;
+          acc[name] = (acc[name] || 0) + 1;
+          return acc;
+        }, {});
+
+        // Add attendance label for duplicates
+        const attendanceWithCount = filteredData.map(entry => ({
+          ...entry,
+          attendanceLabel: attendanceCount[entry.employee.full_name] > 1 ? `attendance: ${attendanceCount[entry.employee.full_name]}` : null,
+        }));
+
+        setAttendanceData(attendanceWithCount);
       } catch (error) {
-        console.error("Error fetching data from AsyncStorage or API:", error);
+        console.error("Error fetching attendance data:", error);
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchAttendanceData();
-  }, []);
-  
-  
+  }, [userData]);
 
   if (loading) {
     return (
@@ -73,29 +74,24 @@ const Dashboard = ({ navigation }) => {
 
   return (
     <Layout navigation={navigation} activeTab="Home">
-      <LinearGradient colors={['#FFA500', '#FF4500']} style={styles.container}>
+      <LinearGradient colors={['#F8BBD0', '#F5C8D1']} style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerText}>Dashboard</Text>
         </View>
         <View style={styles.contentContainer}>
           <Text style={styles.text}>Welcome to the Dashboard!</Text>
-
           <View style={styles.infoContainer}>
-            {attendanceData ? (
-              attendanceData.map((entry, index) => (
-                <View key={index} style={styles.timeContainer}>
-                  <Text style={styles.infoText}>Employee: {entry.employee.full_name || "N/A"}</Text>
-                  <Text style={styles.infoText}>Date: {entry.date || "N/A"}</Text>
-                  <Text style={styles.infoText}>Time In: {entry.time_in || "N/A"}</Text>
-                  <Text style={styles.infoText}>Time Out: {entry.time_out || "N/A"}</Text>
-                  <Text style={styles.infoText}>Is Present: {entry.is_present ? 'Yes' : 'No'}</Text>
-                </View>
-              ))
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No attendance records available</Text>
+            {attendanceData?.map((entry, index) => (
+              <View key={index} style={styles.timeContainer}>
+                <Text style={styles.infoText}>Employee: {entry.employee.full_name || "N/A"}</Text>
+                {entry.attendanceLabel && <Text style={styles.infoText}>{entry.attendanceLabel}</Text>}
+                <Text style={styles.infoText}>Date: {entry.date || "N/A"}</Text>
+                <Text style={styles.infoText}>Time In: <Text style={styles.timeIn}>{entry.time_in || "N/A"}</Text></Text>
+                <Text style={styles.infoText}>Time Out: <Text style={styles.timeOut}>{entry.time_out || "N/A"}</Text></Text>
+                <Text style={styles.infoText}>Is Present: {entry.is_present ? 'Yes' : 'No'}</Text>
               </View>
-            )}
+            ))}
+            {!attendanceData?.length && <Text style={styles.emptyText}>No attendance records available</Text>}
           </View>
         </View>
       </LinearGradient>
@@ -104,68 +100,25 @@ const Dashboard = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    padding: 20,
-    backgroundColor: 'red',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 10,
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  contentContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  text: {
-    fontSize: 18,
-    color: '#333',
-    marginBottom: 20,
-  },
-  infoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 20,
-  },
-  timeContainer: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 15,
-    padding: 15,
-    margin: 10,
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  infoText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  emptyContainer: {
-    padding: 15,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#888',
-  },
+  container: { flex: 1 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { padding: 20, backgroundColor: '#FF80AB', justifyContent: 'center', alignItems: 'center', borderRadius: 20 },
+  headerText: { fontSize: 26, fontWeight: 'bold', color: '#fff',  letterSpacing: 2 },
+  contentContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  text: { fontSize: 18, color: '#333', marginBottom: 20,  fontWeight: '500' },
+  infoContainer: { width: '100%' },
+  timeContainer: { 
+    backgroundColor: '#FFEBEE', 
+    borderRadius: 20, 
+    padding: 15, 
+    margin: 12, 
+    borderWidth: 1, 
+    borderColor: '#FF80AB', 
+    shadowColor: '#FF80AB',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },  
 });
 
 export default Dashboard;

@@ -1,10 +1,8 @@
 import React from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Image } from "react-native";
 
 const Layout = ({ children, navigation, activeTab }) => {
-  // Function to handle footer navigation
   const handleFooterPress = (destination) => {
-    // Check if navigation is available and then navigate
     if (navigation) {
       navigation.navigate(destination);
     } else {
@@ -14,30 +12,45 @@ const Layout = ({ children, navigation, activeTab }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Render the dynamic content (children) */}
       <View style={styles.contentContainer}>
         {children}
       </View>
-
-      {/* Floating Footer */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.footerButton, activeTab === 'Home' && styles.activeFooterButton]}
           onPress={() => handleFooterPress('Dashboard')}
         >
-          <Text style={styles.footerText}>Home</Text>
+          <Image 
+            source={require('./icons/home.png')} // Path to your PNG image
+            style={[styles.icon, activeTab === 'Home' && styles.activeIcon]} 
+          />
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.footerButton, activeTab === 'Notifications' && styles.activeFooterButton]}
           onPress={() => handleFooterPress('Notifications')}
         >
-          <Text style={styles.footerText}>Notifications</Text>
+          <Image 
+            source={require('./icons/notif.png')} // Path to your PNG image
+            style={[styles.icon, activeTab === 'Notifications' && styles.activeIcon]} 
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.footerButton, activeTab === 'History' && styles.activeFooterButton]}
+          onPress={() => handleFooterPress('History')}
+        >
+          <Image 
+            source={require('./icons/history.png')} // Path to your PNG image
+            style={[styles.icon, activeTab === 'History' && styles.activeIcon]} 
+          />
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.footerButton, activeTab === 'Profile' && styles.activeFooterButton]}
           onPress={() => handleFooterPress('Profile')}
         >
-          <Text style={styles.footerText}>Profile</Text>
+          <Image 
+            source={require('./icons/profile.png')} // Path to your PNG image
+            style={[styles.icon, activeTab === 'Profile' && styles.activeIcon]} 
+          />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -54,7 +67,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   footer: {
-    position: 'absolute',  // Fixed at the bottom
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
@@ -70,14 +83,16 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 15,
   },
-  footerText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '500',
+  icon: {
+    width: 30, // Set a fixed width for the icon
+    height: 30, // Set a fixed height for the icon
   },
   activeFooterButton: {
     borderBottomWidth: 3,
     borderBottomColor: '#fff',
+  },
+  activeIcon: {
+    opacity: 1, // You can also add some effects like opacity to highlight active icon
   },
 });
 
