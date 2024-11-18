@@ -15,7 +15,7 @@ const LoginScreen = ({ navigation }) => {
     }
   
     try {
-      const response = await axios.post('http://192.168.1.42:8000/api/login/', {
+      const response = await axios.post('http://192.168.100.154:8000/api/login/', {
         employee_number: employeeId,
         password: password,
       });
@@ -23,7 +23,6 @@ const LoginScreen = ({ navigation }) => {
       if (response.status === 200) {
         const { employee_number, first_name, last_name, token, username } = response.data;
   
-        // Save the user data in AsyncStorage
         const userData = {
           employee_number,
           first_name,
@@ -67,11 +66,11 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <LinearGradient
-      colors={['#FFA500', '#FF4500']}
+      colors={['white', 'white']}
       style={styles.container}
     >
       <LinearGradient
-        colors={[ '#FFA500','#FF4500']}
+        colors={[ '#FF4500','#FFA500']}
         style={styles.LogoCon}
       >
       <Image
@@ -83,7 +82,7 @@ const LoginScreen = ({ navigation }) => {
       
 
       <LinearGradient
-        colors={['#FF4500', '#FFA500']}
+        colors={['white', 'white']}
         style={styles.loginContainer}
       >
         <TextInput
@@ -116,6 +115,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent:'space-around',
+    backgroundColor:'white',
   },
   title: {
     fontSize: 30,
@@ -130,9 +130,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 5,
-    elevation: 5,
+    shadowOpacity: 8,
+    shadowRadius: 20,
+    elevation: 20,
+    marginLeft:20,
+    marginRight:20,
+    marginBottom:60,
   },
   input: {
     height: 50,
@@ -163,14 +166,20 @@ const styles = StyleSheet.create({
     resizeMode: 'contain'
   },
   LogoCon:{
+    shadowColor: 'orange',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 8,
+    shadowRadius: 20,
+    elevation: 20,
     borderBottomLeftRadius: 80,
     borderBottomRightRadius:80,
   },
   titleL:{
     textAlign:'center',
     fontWeight:'bold',
+    fontStyle:'italic',
     fontSize:40,
-    color:'white',
+    color:'black',
   }
 });
 

@@ -7,9 +7,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const NotificationDashboard = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState([]);  // Combined state for all notifications
+  const [notifications, setNotifications] = useState([]);
   const [userName, setUserName] = useState("");
-  const API_URL = "http://192.168.1.42:8000/api/payroll/";
+  const API_URL = "http://192.168.100.154:8000/api/payroll/";
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -29,8 +29,6 @@ const NotificationDashboard = ({ navigation }) => {
                 Authorization: `Token ${token}`,
               },
             });
-
-            console.log("API Response: ", response.data); // Check structure of the response
 
             // Filter payroll notifications for the logged-in user
             const payrollNotifications = response.data.filter(item => item.employee.full_name === fullName);
@@ -53,14 +51,12 @@ const NotificationDashboard = ({ navigation }) => {
   const handleNotificationPress = async (notification) => {
     const netSalary = notification.net_salary && !isNaN(notification.net_salary) ? parseFloat(notification.net_salary) : 0;
 
-    // Mark notification as read (moving to "old" notifications)
     setNotifications(prevNotifications =>
       prevNotifications.map(item =>
         item.id === notification.id ? { ...item, is_read: true } : item
       )
     );
 
-    // Send request to mark the notification as read on the backend
     try {
       const userData = await AsyncStorage.getItem('userData');
       if (userData) {
@@ -69,7 +65,7 @@ const NotificationDashboard = ({ navigation }) => {
 
         if (token) {
           await axios.patch(
-            `http://192.168.1.42:8000/api/payroll/${notification.id}/`,
+            `http://192.168.100.154:8000/api/payroll/${notification.id}/`,
             { is_read: true },
             {
               headers: {
@@ -77,7 +73,6 @@ const NotificationDashboard = ({ navigation }) => {
               },
             }
           );
-          console.log("Notification marked as read:", notification.id);
         }
       }
     } catch (error) {
@@ -92,33 +87,43 @@ const NotificationDashboard = ({ navigation }) => {
     );
   };
 
-  // Function to save the clicked old notification to AsyncStorage as PayHistory
   const handleOldNotificationPress = async (notification) => {
     try {
-      const currentDate = new Date().toLocaleString(); // Get the current date in a readable format
-
-      // Create an object to store the notification along with the current date
-      const notificationWithDate = {
+      // Extracting the payment date (end_date) from the notification
+      const paymentDate = notification.end_date;
+  
+      // Parsing the net salary to a number if valid
+      const amount = notification.net_salary && !isNaN(notification.net_salary) 
+        ? parseFloat(notification.net_salary) 
+        : 0;
+  
+      // Creating the updated notification object with paymentDate and amount
+      const notificationWithPaymentDetails = {
         ...notification,
-        dateSaved: currentDate,
+        paymentDate: paymentDate, // Using the end_date as paymentDate
+        amount: amount,           // Setting the net_salary as Amount
       };
-
-      // Retrieve existing PayHistory from AsyncStorage
+  
+      // Fetching the existing PayHistory from AsyncStorage
       const payHistoryData = await AsyncStorage.getItem('PayHistory');
       const payHistory = payHistoryData ? JSON.parse(payHistoryData) : [];
-
-      // Add the clicked notification with date to the PayHistory array
-      const updatedPayHistory = [...payHistory, notificationWithDate];
-
-      // Save updated PayHistory back to AsyncStorage
+  
+      // Adding the new notification with payment details to the history
+      const updatedPayHistory = [...payHistory, notificationWithPaymentDetails];
+  
+      // Saving the updated PayHistory back to AsyncStorage
       await AsyncStorage.setItem('PayHistory', JSON.stringify(updatedPayHistory));
-
-      Alert.alert("Success", "Notification saved to PayHistory.");
+  
+      // Show a success message
+      Alert.alert("Success", "Notification saved to PayHistory with Payment Date and Amount.");
     } catch (error) {
+      // Handle any errors
       console.error("Error saving to PayHistory:", error);
       Alert.alert("Error", "Failed to save notification to PayHistory.");
     }
   };
+  
+  
 
   if (loading) {
     return (
@@ -133,7 +138,7 @@ const NotificationDashboard = ({ navigation }) => {
 
   return (
     <Layout navigation={navigation} activeTab="Notifications">
-      <LinearGradient colors={['#FFA500', '#FF4500']} style={styles.container}>
+      <LinearGradient colors={['white', 'white']} style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerText}>Notifications</Text>
         </View>
@@ -164,7 +169,7 @@ const NotificationDashboard = ({ navigation }) => {
           )}
 
           <View style={styles.oldNotificationsContainer}>
-            <Text style={styles.oldText}>Old Notifications</Text>
+            <Text style={styles.oldText}>History</Text>
             {notifications.filter(notification => notification.is_read).length > 0 ? (
               notifications.filter(notification => notification.is_read).map((notification, index) => {
                 const netSalary = notification.net_salary && !isNaN(notification.net_salary) ? parseFloat(notification.net_salary) : 0;
@@ -193,6 +198,7 @@ const NotificationDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',  // Set background to white
   },
   loadingContainer: {
     flex: 1,
@@ -205,6 +211,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 5, // Add shadow for Android
   },
   headerText: {
     fontSize: 24,
@@ -241,6 +252,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 3, // Add shadow for Android
   },
   notificationText: {
     fontSize: 16,

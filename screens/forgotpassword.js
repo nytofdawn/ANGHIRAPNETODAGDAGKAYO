@@ -14,7 +14,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
       Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
-    Alert.alert('Success', 'A password reset link has been sent to your email');
+    Alert.alert('Success', 'Go to Counter to Ask for Password');
     navigation.navigate('Login');
   };
 

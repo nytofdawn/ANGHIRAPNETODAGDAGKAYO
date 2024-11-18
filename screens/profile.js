@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Image } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from 'expo-linear-gradient';
 import Layout from "../Navigation/layout";
@@ -12,7 +12,7 @@ const Profile = ({ navigation }) => {
     const fetchUserData = async () => {
       try {
         const data = await AsyncStorage.getItem('userData');
-        const sakit = await AsyncStorage.getItem('attendanceData')
+        const sakit = await AsyncStorage.getItem('attendanceData');
         if (data) {
           setUserData(JSON.parse(data));
         } else {
@@ -69,12 +69,13 @@ const Profile = ({ navigation }) => {
 
   return (
     <Layout navigation={navigation} activeTab="Profile">
-      <LinearGradient colors={['#FFA500', '#FF4500']} style={styles.container}>
+      <LinearGradient colors={['white', 'white']} style={styles.container}>
         <View style={styles.header}>
+          <Image source={require('./logo/profile.png')} style={styles.profileImage} />
           <Text style={styles.headerText}>Profile</Text>
         </View>
         <View style={styles.contentContainer}>
-          <Text style={styles.text}>Welcome, {userData?.first_name} {userData?.last_name}!</Text>
+          <Text style={styles.textT}>Welcome, {userData?.first_name} {userData?.last_name}!</Text>
           <Text style={styles.text}>Username: {userData?.username}</Text>
 
           <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout}>
@@ -92,32 +93,53 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    backgroundColor: 'red',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: '#fff',
   },
   headerText: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    color: 'black',
+    marginTop: 10,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: 'black',
+    marginBottom: 15,
   },
   contentContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
+  },
+  textT:{
+    fontSize: 30,
+    fontWeight: 'bold',
+    fontStyle:'italic',
+    color: 'black',
   },
   text: {
     fontSize: 18,
-    color: '#333',
+    color: 'black',
     marginBottom: 10,
   },
   logoutButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: 'red',
-    borderRadius: 5,
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    padding: 12,
+    backgroundColor: '#FF4500',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#fff',
+    marginBottom:80
   },
   logoutText: {
     fontSize: 18,

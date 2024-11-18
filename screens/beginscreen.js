@@ -9,7 +9,7 @@ function BeginScreen({ navigation }) {
 
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress} activeOpacity={0.7}>
-      <LinearGradient colors={['#FFA500', '#FF4500']} style={styles.gradient}>
+      <LinearGradient colors={['orange', 'orange']} style={styles.gradient}>
         <View style={styles.imageContainer}>
           <Image
             source={require('./logo/qpl.png')}
@@ -41,8 +41,8 @@ const styles = StyleSheet.create({
     marginBottom: 30,  // Adds space between the image and the title
   },
   image: {
-    width: 150,   // Adjust the size of the image
-    height: 150,  // Adjust the size of the image
+    width: 150,  
+    height: 150,  
     resizeMode: 'contain',  // Makes sure the image scales without distortion
   },
   titleContainer: {
