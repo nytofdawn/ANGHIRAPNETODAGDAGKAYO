@@ -53,18 +53,14 @@ const NotificationDashboard = ({ navigation }) => {
           const token = parsedUserData.token;
 
           if (token) {
-            // Add the Authorization header for announcements API request
             const response = await axios.get(announcementAPI_URL, {
               headers: {
                 Authorization: `Token ${token}`,
               },
             });
 
-            // Log the response data for debugging
-            console.log("Announcements Response:", response.data);
 
-            // Assuming response.data is an array of announcements with the correct fields
-            setAnnouncements(response.data);  // Save the response
+            setAnnouncements(response.data); 
           } else {
             console.error("No token found in AsyncStorage");
           }

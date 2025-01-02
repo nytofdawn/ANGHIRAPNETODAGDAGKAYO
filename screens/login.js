@@ -33,7 +33,6 @@ const LoginScreen = ({ navigation }) => {
       backAction
     );
 
-    // Clean up the event listener when the component is unmounted
     return () => backHandler.remove();
   }, []);
 
@@ -67,30 +66,24 @@ const LoginScreen = ({ navigation }) => {
             onPress: () => navigation.navigate('Dashboard'),
           },
         ]);
-  
-        console.log('Login successful:', response.data);
       } else if (response.status === 401) {
         Alert.alert('Login Failed', 'Invalid employee number or password', [
           { text: 'Try Again' },
         ]);
-        console.log('Login failed: Invalid credentials');
       } else {
         Alert.alert('Error', 'Something went wrong. Please try again later.');
-        console.log('Unexpected status code:', response.status);
       }
     } catch (error) {
-      // Handle network or server errors
       if (error.response) {
         // Server error
         Alert.alert('Error', 'Check your credentials or internet connection');
-        console.error('Error response:', error.response);
       } else {
         // Network error
         Alert.alert('Network Error', 'There was an issue connecting. Please check your internet connection.');
-        console.error('Network error:', error);
       }
     }
   };
+  
 
   return (
     <LinearGradient
@@ -147,7 +140,7 @@ const styles = StyleSheet.create({
     fontSize: 40,
     color: 'black',
   },
-  logoCon: {
+  LogoCon: {
     shadowColor: 'orange',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 8,
