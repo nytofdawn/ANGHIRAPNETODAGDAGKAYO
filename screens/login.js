@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Text, TextInput, Button, StyleSheet, Alert, Image,View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Text, TextInput, Button, StyleSheet, Alert, Image, View, BackHandler } from 'react-native';
 import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,6 +8,35 @@ const LoginScreen = ({ navigation }) => {
   const [employeeId, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
 
+  useEffect(() => {
+    const backAction = () => {
+      Alert.alert(
+        "Are you sure?",
+        "Do you want to exit the app?",
+        [
+          {
+            text: "Cancel",
+            onPress: () => null,
+            style: "cancel"
+          },
+          {
+            text: "YES",
+            onPress: () => BackHandler.exitApp()
+          }
+        ]
+      );
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    // Clean up the event listener when the component is unmounted
+    return () => backHandler.remove();
+  }, []);
+
   const handleLogin = async () => {
     if (!employeeId || !password) {
       Alert.alert('Error', 'Please enter both Employee ID and Password');
@@ -15,7 +44,7 @@ const LoginScreen = ({ navigation }) => {
     }
   
     try {
-      const response = await axios.post('http://192.168.100.154:8000/api/login/', {
+      const response = await axios.post('http://3.27.173.131/api/login/', {
         employee_number: employeeId,
         password: password,
       });
@@ -62,7 +91,6 @@ const LoginScreen = ({ navigation }) => {
       }
     }
   };
-  
 
   return (
     <LinearGradient
@@ -70,16 +98,15 @@ const LoginScreen = ({ navigation }) => {
       style={styles.container}
     >
       <LinearGradient
-        colors={[ '#FF4500','#FFA500']}
+        colors={['#FF4500', '#FFA500']}
         style={styles.LogoCon}
       >
-      <Image
-            source={require('./logo/qpl.png')}
-            style={styles.image}
-          />
-          </LinearGradient>
+        <Image
+          source={require('./logo/qpl.png')}
+          style={styles.image}
+        />
+      </LinearGradient>
       <Text style={styles.titleL}>Login</Text>
-      
 
       <LinearGradient
         colors={['white', 'white']}
@@ -102,10 +129,6 @@ const LoginScreen = ({ navigation }) => {
         />
 
         <Button title="Login" onPress={handleLogin} />
-        
-        <Text style={styles.forgotPasswordText} onPress={() => navigation.navigate('ForgotPassword')}>
-          Forgot your password?
-        </Text>
       </LinearGradient>
     </LinearGradient>
   );
@@ -114,15 +137,24 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent:'space-around',
-    backgroundColor:'white',
+    justifyContent: 'space-around',
+    backgroundColor: 'white',
   },
-  title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginBottom: 20,
+  titleL: {
     textAlign: 'center',
-    color: 'white',
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+    fontSize: 40,
+    color: 'black',
+  },
+  logoCon: {
+    shadowColor: 'orange',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 8,
+    shadowRadius: 20,
+    elevation: 20,
+    borderBottomLeftRadius: 80,
+    borderBottomRightRadius: 80,
   },
   loginContainer: {
     backgroundColor: 'white',
@@ -133,9 +165,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 8,
     shadowRadius: 20,
     elevation: 20,
-    marginLeft:20,
-    marginRight:20,
-    marginBottom:60,
+    marginLeft: 20,
+    marginRight: 20,
+    marginBottom: 60,
   },
   input: {
     height: 50,
@@ -145,42 +177,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingLeft: 10,
   },
+  image: {
+    width: 300,
+    height: 300,
+    resizeMode: 'contain',
+  },
   switchText: {
     marginTop: 20,
     textAlign: 'center',
     color: 'black',
   },
-  link: {
-    color: 'blue',
-    textDecorationLine: 'underline',
-  },
-  forgotPasswordText: {
-    marginTop: 15,
-    textAlign: 'center',
-    color: 'blue',
-    textDecorationLine: 'underline',
-  },
-  image:{
-    width: 300,   // Adjust the size of the image
-    height: 300,  // Adjust the size of the image
-    resizeMode: 'contain'
-  },
-  LogoCon:{
-    shadowColor: 'orange',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 8,
-    shadowRadius: 20,
-    elevation: 20,
-    borderBottomLeftRadius: 80,
-    borderBottomRightRadius:80,
-  },
-  titleL:{
-    textAlign:'center',
-    fontWeight:'bold',
-    fontStyle:'italic',
-    fontSize:40,
-    color:'black',
-  }
 });
 
 export default LoginScreen;

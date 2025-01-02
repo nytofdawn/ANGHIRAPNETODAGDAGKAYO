@@ -6,7 +6,6 @@ import LoginScreen from './screens/login';
 import Dashboard from './screens/dashboard';
 import profilescreen from './screens/profile';
 import NotificationScreen from './screens/notification';
-import ForgotPasswordScreen from './screens/forgotpassword';
 import BeginScreen from './screens/beginscreen';
 import HistoryScreen from './screens/history';
 
@@ -47,7 +46,6 @@ const App = () => {
           <Stack.Screen name="Begin" component={BeginScreen} />
           <Stack.Screen name="Dashboard" component={Dashboard} />
           <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
           <Stack.Screen name="Notifications" component={NotificationScreen} />
           <Stack.Screen name="Profile" component={profilescreen} />
           <Stack.Screen name="History" component={HistoryScreen} />

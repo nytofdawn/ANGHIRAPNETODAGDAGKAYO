@@ -38,7 +38,7 @@ const HistoryScreen = ({ navigation }) => {
       setError(null);
 
       try {
-        const response = await fetch("http://192.168.100.154:8000/api/attendance/", {
+        const response = await fetch("http://3.27.173.131/api/attendance/", {
           method: "GET",
           headers: {
             Authorization: `Token ${userData.token}`,
@@ -135,18 +135,21 @@ const HistoryScreen = ({ navigation }) => {
         <View style={styles.header}>
           <Text style={styles.headerText}>Attendance History</Text>
         </View>
-        <View style={styles.totalAttendanceContainer}>
-          <Text style={styles.totalAttendanceText}>Total Attendance: {getTotalAttendance()} this Month</Text>
-        </View>
+        
+        <View style={styles.contentContainer}>
+          <View style={styles.totalAttendanceContainer}>
+            <Text style={styles.totalAttendanceText}>Total Attendance: {getTotalAttendance()} this Month</Text>
+          </View>
 
-        <View style={styles.payHistoryContainer}>
-          <Text style={styles.payHistoryHeaderText}>Pay History</Text>
-          <FlatList
-            data={payHistoryData}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={renderPayHistoryItem}
-            contentContainerStyle={styles.listContainer}
-          />
+          <View style={styles.payHistoryContainer}>
+            <Text style={styles.payHistoryHeaderText}>Pay History</Text>
+            <FlatList
+              data={payHistoryData}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={renderPayHistoryItem}
+              contentContainerStyle={styles.listContainer}
+            />
+          </View>
         </View>
       </LinearGradient>
     </Layout>
@@ -154,7 +157,7 @@ const HistoryScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, },
+  container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   errorContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
   errorText: { fontSize: 18, color: "red", textAlign: "center" },
@@ -176,8 +179,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     letterSpacing: 2,
   },
-  totalAttendanceContainer: {
+  contentContainer: {
+    alignItems: 'center', // Centers the columns horizontally
     marginTop: 20,
+    flex: 1,
+  },
+  totalAttendanceContainer: {
     backgroundColor: "#FFEBEE",
     padding: 15,
     borderRadius: 10,
@@ -187,6 +194,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
+    marginBottom: 20,
+    width: '90%',
   },
   totalAttendanceText: {
     fontSize: 18,
@@ -194,7 +203,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   payHistoryContainer: {
-    marginTop: 20,
     backgroundColor: "#FFEBEE",
     padding: 15,
     borderRadius: 10,
@@ -204,6 +212,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
+    width: '90%',
   },
   payHistoryHeaderText: {
     fontSize: 20,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, BackHandler, Alert} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Layout from "../Navigation/layout";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -36,7 +36,7 @@ const Dashboard = ({ navigation }) => {
       setError(null);
 
       try {
-        const response = await fetch("http://192.168.100.154:8000/api/attendance/", {
+        const response = await fetch("http://3.27.173.131/api/attendance/", {
           method: "GET",
           headers: {
             Authorization: `Token ${userData.token}`,
@@ -81,6 +81,49 @@ const Dashboard = ({ navigation }) => {
   const currentDate = getCurrentDate();
   const currentAttendance = attendanceData.filter((entry) => entry.date === currentDate);
 
+
+  useEffect(() => {
+    const backAction = () => {
+      Alert.alert(
+        "Are you sure?",
+        "Do you want to log out and exit the app?",
+        [
+          {
+            text: "Cancel",
+            onPress: () => null,
+            style: "cancel"
+          },
+          {
+            text: "LOG OUT",
+            onPress: async () => {
+              // Clear AsyncStorage when logging out
+              await AsyncStorage.clear();
+  
+              // Navigate to the Login screen
+              navigation.navigate('Login');
+            }
+          },
+          {
+            text: "EXIT",
+            onPress: () => {
+              BackHandler.exitApp(); // Exit the app
+            }
+          }
+        ]
+      );
+      return true; // Prevent default back action (exit app)
+    };
+  
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+  
+    // Clean up the event listener when the component is unmounted
+    return () => backHandler.remove();
+  }, [navigation]);
+  
+  
   if (loading) {
     return (
       <Layout navigation={navigation} activeTab="Home">

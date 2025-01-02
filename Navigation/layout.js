@@ -1,5 +1,6 @@
 import React from "react";
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, Image } from "react-native";
+import { View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
+import Icon from 'react-native-vector-icons/FontAwesome'; // Import vector icon library
 
 const Layout = ({ children, navigation, activeTab }) => {
   const handleFooterPress = (destination) => {
@@ -20,37 +21,25 @@ const Layout = ({ children, navigation, activeTab }) => {
           style={[styles.footerButton, activeTab === 'Home' && styles.activeFooterButton]}
           onPress={() => handleFooterPress('Dashboard')}
         >
-          <Image 
-            source={require('./icons/home.png')} // Path to your PNG image
-            style={[styles.icon, activeTab === 'Home' && styles.activeIcon]} 
-          />
+          <Icon name="home" size={40} color={activeTab === 'Home' ? '#fff' : '#000'} style={styles.icon} />
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.footerButton, activeTab === 'Notifications' && styles.activeFooterButton]}
           onPress={() => handleFooterPress('Notifications')}
         >
-          <Image 
-            source={require('./icons/notif.png')} // Path to your PNG image
-            style={[styles.icon, activeTab === 'Notifications' && styles.activeIcon]} 
-          />
+          <Icon name="bell" size={40} color={activeTab === 'Notifications' ? '#fff' : '#000'} style={styles.icon} />
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.footerButton, activeTab === 'History' && styles.activeFooterButton]}
           onPress={() => handleFooterPress('History')}
         >
-          <Image 
-            source={require('./icons/history.png')} // Path to your PNG image
-            style={[styles.icon, activeTab === 'History' && styles.activeIcon]} 
-          />
+          <Icon name="history" size={40} color={activeTab === 'History' ? '#fff' : '#000'} style={styles.icon} />
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.footerButton, activeTab === 'Profile' && styles.activeFooterButton]}
           onPress={() => handleFooterPress('Profile')}
         >
-          <Image 
-            source={require('./icons/profile.png')} // Path to your PNG image
-            style={[styles.icon, activeTab === 'Profile' && styles.activeIcon]} 
-          />
+          <Icon name="user" size={40} color={activeTab === 'Profile' ? '#fff' : '#000'} style={styles.icon} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -84,8 +73,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   icon: {
-    width: 30, // Set a fixed width for the icon
-    height: 30, // Set a fixed height for the icon
+    width: 40, // Increased size for vector icon
+    height: 40, // Increased size for vector icon
   },
   activeFooterButton: {
     borderBottomWidth: 3,

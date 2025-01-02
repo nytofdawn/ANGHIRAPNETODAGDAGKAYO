@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from 'expo-linear-gradient';
 import Layout from "../Navigation/layout";
+import Icon from 'react-native-vector-icons/FontAwesome'; // Import vector icon library
 
 const Profile = ({ navigation }) => {
   const [userData, setUserData] = useState(null);
@@ -12,7 +13,6 @@ const Profile = ({ navigation }) => {
     const fetchUserData = async () => {
       try {
         const data = await AsyncStorage.getItem('userData');
-        const sakit = await AsyncStorage.getItem('attendanceData');
         if (data) {
           setUserData(JSON.parse(data));
         } else {
@@ -38,7 +38,6 @@ const Profile = ({ navigation }) => {
       console.error('Error logging out', error);
     }
   };
-  
 
   const confirmLogout = () => {
     Alert.alert(
@@ -71,11 +70,13 @@ const Profile = ({ navigation }) => {
     <Layout navigation={navigation} activeTab="Profile">
       <LinearGradient colors={['white', 'white']} style={styles.container}>
         <View style={styles.header}>
-          <Image source={require('./logo/profile.png')} style={styles.profileImage} />
-          <Text style={styles.headerText}>Profile</Text>
+          <Icon name="user" size={100} color="black" style={styles.profileImage} />
+          <Text style={styles.headerText}>PROFILE</Text>
         </View>
         <View style={styles.contentContainer}>
           <Text style={styles.textT}>Welcome, {userData?.first_name} {userData?.last_name}!</Text>
+          {/* Add employee_number below Welcome text */}
+          <Text style={styles.employeeNumberText}>Employee Number: {userData?.employee_number}</Text>
           <Text style={styles.text}>Username: {userData?.username}</Text>
 
           <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout}>
@@ -93,11 +94,15 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    backgroundColor: 'transparent',
+    backgroundColor: 'red',
     justifyContent: 'center',
     alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 5,
   },
   headerText: {
     fontSize: 28,
@@ -106,11 +111,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: 'black',
     marginBottom: 15,
   },
   contentContainer: {
@@ -124,6 +124,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontStyle:'italic',
     color: 'black',
+  },
+  employeeNumberText: {
+    fontSize: 18,
+    color: 'black',
+    marginVertical: 10,
+    fontWeight: 'bold',
   },
   text: {
     fontSize: 18,

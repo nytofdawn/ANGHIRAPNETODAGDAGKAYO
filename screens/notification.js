@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, Image } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import Layout from "../Navigation/layout";
 import axios from 'axios';
@@ -9,7 +9,9 @@ const NotificationDashboard = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [userName, setUserName] = useState("");
-  const API_URL = "http://192.168.100.154:8000/api/payroll/";
+  const [announcements, setAnnouncements] = useState([]);
+  const API_URL = "http://3.27.173.131/api/payroll/";
+  const announcementAPI_URL = "http://3.27.173.131/api/announcements/";
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -23,14 +25,12 @@ const NotificationDashboard = ({ navigation }) => {
           if (token) {
             setUserName(fullName);
 
-            // Fetch payroll notifications from the API
             const response = await axios.get(API_URL, {
               headers: {
                 Authorization: `Token ${token}`,
               },
             });
 
-            // Filter payroll notifications for the logged-in user
             const payrollNotifications = response.data.filter(item => item.employee.full_name === fullName);
             setNotifications(payrollNotifications);
           } else {
@@ -45,7 +45,38 @@ const NotificationDashboard = ({ navigation }) => {
       }
     };
 
+    const fetchAnnouncements = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('userData');
+        if (userData) {
+          const parsedUserData = JSON.parse(userData);
+          const token = parsedUserData.token;
+
+          if (token) {
+            // Add the Authorization header for announcements API request
+            const response = await axios.get(announcementAPI_URL, {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
+            });
+
+            // Log the response data for debugging
+            console.log("Announcements Response:", response.data);
+
+            // Assuming response.data is an array of announcements with the correct fields
+            setAnnouncements(response.data);  // Save the response
+          } else {
+            console.error("No token found in AsyncStorage");
+          }
+        }
+      } catch (error) {
+        console.error("Error retrieving announcements:", error);
+        Alert.alert("Error", "Failed to load announcements.");
+      }
+    };
+
     fetchNotifications();
+    fetchAnnouncements();
   }, []);
 
   const handleNotificationPress = async (notification) => {
@@ -65,7 +96,7 @@ const NotificationDashboard = ({ navigation }) => {
 
         if (token) {
           await axios.patch(
-            `http://192.168.100.154:8000/api/payroll/${notification.id}/`,
+            `http://3.27.173.131/api/payroll/${notification.id}/`,
             { is_read: true },
             {
               headers: {
@@ -80,7 +111,6 @@ const NotificationDashboard = ({ navigation }) => {
       Alert.alert("Error", "Failed to update notification status. Please try again later.");
     }
 
-    // Display payday alert
     Alert.alert(
       "PAYDAY",
       `Payday na! Your net salary is ₱${netSalary.toFixed(2)}. Don't forget to manage your finances!`
@@ -89,41 +119,31 @@ const NotificationDashboard = ({ navigation }) => {
 
   const handleOldNotificationPress = async (notification) => {
     try {
-      // Extracting the payment date (end_date) from the notification
       const paymentDate = notification.end_date;
-  
-      // Parsing the net salary to a number if valid
-      const amount = notification.net_salary && !isNaN(notification.net_salary) 
-        ? parseFloat(notification.net_salary) 
+
+      const amount = notification.net_salary && !isNaN(notification.net_salary)
+        ? parseFloat(notification.net_salary)
         : 0;
-  
-      // Creating the updated notification object with paymentDate and amount
+
       const notificationWithPaymentDetails = {
         ...notification,
-        paymentDate: paymentDate, // Using the end_date as paymentDate
-        amount: amount,           // Setting the net_salary as Amount
+        paymentDate: paymentDate,
+        amount: amount,
       };
-  
-      // Fetching the existing PayHistory from AsyncStorage
+
       const payHistoryData = await AsyncStorage.getItem('PayHistory');
       const payHistory = payHistoryData ? JSON.parse(payHistoryData) : [];
-  
-      // Adding the new notification with payment details to the history
+
       const updatedPayHistory = [...payHistory, notificationWithPaymentDetails];
-  
-      // Saving the updated PayHistory back to AsyncStorage
+
       await AsyncStorage.setItem('PayHistory', JSON.stringify(updatedPayHistory));
-  
-      // Show a success message
+
       Alert.alert("Success", "Notification saved to PayHistory with Payment Date and Amount.");
     } catch (error) {
-      // Handle any errors
       console.error("Error saving to PayHistory:", error);
       Alert.alert("Error", "Failed to save notification to PayHistory.");
     }
   };
-  
-  
 
   if (loading) {
     return (
@@ -168,6 +188,33 @@ const NotificationDashboard = ({ navigation }) => {
             <Text>No new payroll notifications available.</Text>
           )}
 
+          <View style={styles.announcementContainer}>
+            <Text style={styles.text}>Announcements</Text>
+            {announcements.length > 0 ? (
+              announcements.map((announcement, index) => {
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.notificationCard}
+                    onPress={() => Alert.alert("Announcement", announcement.description)}
+                  >
+                    <Text style={styles.notificationText}>
+                      {announcement.title || "No title"}
+                    </Text>
+                    {announcement.announcement_image ? (
+                      <Image
+                        source={{ uri: announcement.announcement_image }}
+                        style={styles.announcementImage}
+                      />
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })
+            ) : (
+              <Text>No announcements available.</Text>
+            )}
+          </View>
+
           <View style={styles.oldNotificationsContainer}>
             <Text style={styles.oldText}>History</Text>
             {notifications.filter(notification => notification.is_read).length > 0 ? (
@@ -198,7 +245,7 @@ const NotificationDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',  // Set background to white
+    backgroundColor: 'white',
   },
   loadingContainer: {
     flex: 1,
@@ -215,7 +262,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
     shadowRadius: 4,
-    elevation: 5, // Add shadow for Android
+    elevation: 5,
   },
   headerText: {
     fontSize: 24,
@@ -233,6 +280,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   newNotificationsContainer: {
+    marginBottom: 20,
+  },
+  announcementContainer: {
     marginBottom: 20,
   },
   oldNotificationsContainer: {
@@ -258,11 +308,16 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
     shadowRadius: 4,
-    elevation: 3, // Add shadow for Android
+    elevation: 3,
   },
   notificationText: {
     fontSize: 16,
     color: '#333',
+  },
+  announcementImage: {
+    width: 100,
+    height: 100,
+    marginTop: 10,
   },
 });
 
