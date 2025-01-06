@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: 'red',
+    backgroundColor: 'orange',
     paddingVertical: 2,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,

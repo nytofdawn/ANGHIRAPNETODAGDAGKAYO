@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, BackHandler, Alert} from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, BackHandler, Alert, Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Layout from "../Navigation/layout";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -96,10 +96,8 @@ const Dashboard = ({ navigation }) => {
           {
             text: "LOG OUT",
             onPress: async () => {
-              // Clear AsyncStorage when logging out
               await AsyncStorage.clear();
   
-              // Navigate to the Login screen
               navigation.navigate('Login');
             }
           },
@@ -111,7 +109,7 @@ const Dashboard = ({ navigation }) => {
           }
         ]
       );
-      return true; // Prevent default back action (exit app)
+      return true;
     };
   
     const backHandler = BackHandler.addEventListener(
@@ -119,10 +117,9 @@ const Dashboard = ({ navigation }) => {
       backAction
     );
   
-    // Clean up the event listener when the component is unmounted
+
     return () => backHandler.remove();
   }, [navigation]);
-  
   
   if (loading) {
     return (
@@ -150,6 +147,10 @@ const Dashboard = ({ navigation }) => {
       <LinearGradient colors={["#FFFFFF", "#FFFFFF"]} style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerText}>Dashboard</Text>
+        </View>
+        {/* Add the Logo here */}
+        <View style={styles.logoContainer}>
+          <Image source={require('./logo/qpl.png')} style={styles.logo} />
         </View>
         <View style={styles.contentContainer}>
           <View style={styles.attendanceContainer}>
@@ -181,7 +182,7 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 18, color: "red", textAlign: "center" },
   header: {
     padding: 20,
-    backgroundColor: 'red',
+    backgroundColor: '#FFA580',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
@@ -197,6 +198,15 @@ const styles = StyleSheet.create({
     color: "#fff",
     letterSpacing: 2,
   },
+  logoContainer: {
+    alignItems: 'center', 
+    marginVertical: 20, 
+  },
+  logo: {
+    width: 100, 
+    height: 100, 
+    resizeMode: 'contain',
+  },
   contentContainer: {
     flex: 1,
     justifyContent: "center",
@@ -204,16 +214,16 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   attendanceContainer: {
-    backgroundColor: "#FFFFFF", // White background for the attendance container
+    backgroundColor: "#FFFFFF", 
     borderRadius: 20,
     padding: 20,
     width: "100%",
     borderWidth: 1,
-    borderColor: "#FF7F00", // Orange border
+    borderColor: "#FF7F00", 
     shadowColor: "#FF7F00",
     shadowOpacity: 0.4,
     shadowRadius: 8,
-    elevation: 6, // Floating effect with shadow
+    elevation: 6, 
   },
   infoText: { fontSize: 18, color: "#333", marginBottom: 10 },
   timeIn: { color: "#4CAF50", fontWeight: "bold" },

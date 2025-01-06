@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    backgroundColor: 'red',
+    backgroundColor: '#FFA580',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,

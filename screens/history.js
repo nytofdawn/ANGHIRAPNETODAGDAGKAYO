@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 18, color: "red", textAlign: "center" },
   header: {
     padding: 20,
-    backgroundColor: 'red',
+    backgroundColor: '#FFA580',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
