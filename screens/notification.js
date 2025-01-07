@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, Image } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import Layout from "../Navigation/layout";
 import axios from 'axios';
@@ -9,9 +9,7 @@ const NotificationDashboard = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [userName, setUserName] = useState("");
-  const [announcements, setAnnouncements] = useState([]);
   const API_URL = "http://3.27.173.131/api/payroll/";
-  const announcementAPI_URL = "http://3.27.173.131/api/announcements/";
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -45,34 +43,7 @@ const NotificationDashboard = ({ navigation }) => {
       }
     };
 
-    const fetchAnnouncements = async () => {
-      try {
-        const userData = await AsyncStorage.getItem('userData');
-        if (userData) {
-          const parsedUserData = JSON.parse(userData);
-          const token = parsedUserData.token;
-
-          if (token) {
-            const response = await axios.get(announcementAPI_URL, {
-              headers: {
-                Authorization: `Token ${token}`,
-              },
-            });
-
-
-            setAnnouncements(response.data); 
-          } else {
-            console.error("No token found in AsyncStorage");
-          }
-        }
-      } catch (error) {
-        console.error("Error retrieving announcements:", error);
-        Alert.alert("Error", "Failed to load announcements.");
-      }
-    };
-
     fetchNotifications();
-    fetchAnnouncements();
   }, []);
 
   const handleNotificationPress = async (notification) => {
@@ -184,33 +155,6 @@ const NotificationDashboard = ({ navigation }) => {
             <Text>No new payroll notifications available.</Text>
           )}
 
-          <View style={styles.announcementContainer}>
-            <Text style={styles.text}>Announcements</Text>
-            {announcements.length > 0 ? (
-              announcements.map((announcement, index) => {
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.notificationCard}
-                    onPress={() => Alert.alert("Announcement", announcement.description)}
-                  >
-                    <Text style={styles.notificationText}>
-                      {announcement.title || "No title"}
-                    </Text>
-                    {announcement.announcement_image ? (
-                      <Image
-                        source={{ uri: announcement.announcement_image }}
-                        style={styles.announcementImage}
-                      />
-                    ) : null}
-                  </TouchableOpacity>
-                );
-              })
-            ) : (
-              <Text>No announcements available.</Text>
-            )}
-          </View>
-
           <View style={styles.oldNotificationsContainer}>
             <Text style={styles.oldText}>History</Text>
             {notifications.filter(notification => notification.is_read).length > 0 ? (
@@ -278,9 +222,6 @@ const styles = StyleSheet.create({
   newNotificationsContainer: {
     marginBottom: 20,
   },
-  announcementContainer: {
-    marginBottom: 20,
-  },
   oldNotificationsContainer: {
     marginTop: 20,
     paddingTop: 10,
@@ -309,11 +250,6 @@ const styles = StyleSheet.create({
   notificationText: {
     fontSize: 16,
     color: '#333',
-  },
-  announcementImage: {
-    width: 100,
-    height: 100,
-    marginTop: 10,
   },
 });
 

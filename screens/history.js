@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Layout from "../Navigation/layout";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
 const HistoryScreen = ({ navigation }) => {
   const [attendanceData, setAttendanceData] = useState([]);
-  const [payHistoryData, setPayHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
   const [error, setError] = useState(null);
+  const [announcements, setAnnouncements] = useState([]);
+  const announcementAPI_URL = "http://3.27.173.131/api/announcements/";
 
   // Fetch user data from AsyncStorage
   useEffect(() => {
@@ -69,20 +71,34 @@ const HistoryScreen = ({ navigation }) => {
     fetchAttendanceData();
   }, [userData]);
 
-  // Fetch PayHistory from AsyncStorage
+  // Fetch announcements
   useEffect(() => {
-    const fetchPayHistory = async () => {
+    const fetchAnnouncements = async () => {
       try {
-        const storedPayHistory = await AsyncStorage.getItem("PayHistory");
-        if (storedPayHistory) {
-          setPayHistoryData(JSON.parse(storedPayHistory));
+        const userData = await AsyncStorage.getItem("userData");
+        if (userData) {
+          const parsedUserData = JSON.parse(userData);
+          const token = parsedUserData.token;
+
+          if (token) {
+            const response = await axios.get(announcementAPI_URL, {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
+            });
+
+            setAnnouncements(response.data);
+          } else {
+            console.error("No token found in AsyncStorage");
+          }
         }
       } catch (error) {
-        console.error("Error retrieving PayHistory from AsyncStorage:", error);
+        console.error("Error retrieving announcements:", error);
+        Alert.alert("Error", "Failed to load announcements.");
       }
     };
 
-    fetchPayHistory();
+    fetchAnnouncements();
   }, []);
 
   // Calculate the total attendance for the current month
@@ -114,41 +130,37 @@ const HistoryScreen = ({ navigation }) => {
     );
   }
 
-  const renderAttendanceItem = ({ item }) => (
-    <View style={styles.attendanceItem}>
-      <Text style={styles.attendanceText}>Date: {item.date}</Text>
-      <Text style={styles.attendanceText}>Time In: {item.time_in || "N/A"}</Text>
-      <Text style={styles.attendanceText}>Time Out: {item.time_out || "N/A"}</Text>
-    </View>
-  );
-
-  const renderPayHistoryItem = ({ item }) => (
-    <View style={styles.payHistoryItem}>
-      <Text style={styles.payHistoryText}>Payment Date: {item.end_date}</Text>
-      <Text style={styles.payHistoryText}>Amount: {item.amount}</Text>
-    </View>
-  );
-
   return (
     <Layout navigation={navigation} activeTab="History">
       <LinearGradient colors={["white", "white"]} style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerText}>Attendance History</Text>
         </View>
-        
+
         <View style={styles.contentContainer}>
+          {/* Total Attendance Section */}
           <View style={styles.totalAttendanceContainer}>
             <Text style={styles.totalAttendanceText}>Total Attendance: {getTotalAttendance()} this Month</Text>
           </View>
 
-          <View style={styles.payHistoryContainer}>
-            <Text style={styles.payHistoryHeaderText}>Pay History</Text>
-            <FlatList
-              data={payHistoryData}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={renderPayHistoryItem}
-              contentContainerStyle={styles.listContainer}
-            />
+          {/* Announcement Section */}
+          <View style={styles.announcementContainer}>
+            <Text style={styles.text}>Announcement</Text>
+            {announcements.length > 0 ? (
+              announcements.map((announcement, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.notificationCard}
+                  onPress={() => Alert.alert("Announcement", announcement.description)}
+                >
+                  <Text style={styles.notificationText}>
+                    {announcement.title || "No title"}
+                  </Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text>No Announcement Available</Text>
+            )}
           </View>
         </View>
       </LinearGradient>
@@ -180,7 +192,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   contentContainer: {
-    alignItems: 'center', // Centers the columns horizontally
+    alignItems: 'center',
     marginTop: 20,
     flex: 1,
   },
@@ -202,9 +214,11 @@ const styles = StyleSheet.create({
     color: "#333",
     fontWeight: "bold",
   },
-  payHistoryContainer: {
-    backgroundColor: "#FFEBEE",
+  announcementContainer: {
+    marginTop: 20,
+    width: '90%',
     padding: 15,
+    backgroundColor: '#FFEBEE',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#FF80AB",
@@ -212,50 +226,44 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
+  },
+  text: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  notificationCard: {
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: '#FF80AB',
+    borderRadius: 8,
+    elevation: 4,
+  },
+  notificationText: {
+    fontSize: 16,
+    color: '#fff',
+  },
+  attendanceItem: {
+    backgroundColor: "#FFEBEE",
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#FF80AB",
+    shadowColor: "#FF80AB",
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+    marginBottom: 10,
     width: '90%',
   },
-  payHistoryHeaderText: {
-    fontSize: 20,
-    color: "#333",
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  payHistoryItem: {
-    backgroundColor: "#FFEBEE",
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#FF80AB",
-    marginBottom: 10,
-    shadowColor: "#FF80AB",
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  payHistoryText: {
+  attendanceText: {
     fontSize: 14,
     color: "#333",
     marginBottom: 5,
   },
   listContainer: {
     paddingBottom: 10,
-  },
-  attendanceItem: {
-    marginRight: 80,
-    backgroundColor: "#FFEBEE",
-    borderRadius: 10,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#FF80AB",
-    shadowColor: "#FF80AB",
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  attendanceText: {
-    fontSize: 10,
-    color: "#333",
-    marginBottom: 8,
   },
 });
 

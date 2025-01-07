@@ -5,11 +5,15 @@ import Layout from "../Navigation/layout";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Dashboard = ({ navigation }) => {
-  const [attendanceData, setAttendanceData] = useState([]); 
+  const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
-  const [totalAttendance, setTotalAttendance] = useState(0); 
+  const [totalAttendance, setTotalAttendance] = useState(0);
   const [error, setError] = useState(null);
+
+  // New state for tracking alerts
+  const [timeInAlertShown, setTimeInAlertShown] = useState(false);
+  const [timeOutAlertShown, setTimeOutAlertShown] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -53,7 +57,7 @@ const Dashboard = ({ navigation }) => {
           (entry) => String(entry.employee.id_number) === String(userData?.employee_number)
         );
 
-        setAttendanceData(userAttendance);  
+        setAttendanceData(userAttendance);
 
         const attendanceCount = userAttendance.length;
         setTotalAttendance(attendanceCount);
@@ -81,6 +85,37 @@ const Dashboard = ({ navigation }) => {
   const currentDate = getCurrentDate();
   const currentAttendance = attendanceData.filter((entry) => entry.date === currentDate);
 
+  // New Alert Logic for one-time alerts
+  useEffect(() => {
+    if (currentAttendance.length > 0) {
+      const { time_in, time_out } = currentAttendance[0];
+
+      // Helper function to convert time to PH Time
+      const convertToPHTime = (utcTime) => {
+        if (!utcTime) return null;
+        const date = new Date(`${currentDate}T${utcTime}Z`); // Assume UTC time
+        const options = {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          timeZone: "Asia/Manila",
+        };
+        return new Intl.DateTimeFormat("en-PH", options).format(date);
+      };
+
+      const phTimeIn = convertToPHTime(time_in);
+      const phTimeOut = convertToPHTime(time_out);
+
+      if (phTimeIn && !timeInAlertShown) {
+        Alert.alert("Attendance Update", `You have clocked in at ${phTimeIn}`);
+        setTimeInAlertShown(true); // Mark alert as shown
+      }
+      if (phTimeOut && !timeOutAlertShown) {
+        Alert.alert("Attendance Update", `You have clocked out at ${phTimeOut}`);
+        setTimeOutAlertShown(true); // Mark alert as shown
+      }
+    }
+  }, [currentAttendance, timeInAlertShown, timeOutAlertShown]);
 
   useEffect(() => {
     const backAction = () => {
@@ -91,36 +126,34 @@ const Dashboard = ({ navigation }) => {
           {
             text: "Cancel",
             onPress: () => null,
-            style: "cancel"
+            style: "cancel",
           },
           {
             text: "LOG OUT",
             onPress: async () => {
               await AsyncStorage.clear();
-  
-              navigation.navigate('Login');
-            }
+              navigation.navigate("Login");
+            },
           },
           {
             text: "EXIT",
             onPress: () => {
               BackHandler.exitApp(); // Exit the app
-            }
-          }
+            },
+          },
         ]
       );
       return true;
     };
-  
+
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       backAction
     );
-  
 
     return () => backHandler.remove();
   }, [navigation]);
-  
+
   if (loading) {
     return (
       <Layout navigation={navigation} activeTab="Home">
@@ -148,14 +181,14 @@ const Dashboard = ({ navigation }) => {
         <View style={styles.header}>
           <Text style={styles.headerText}>Dashboard</Text>
         </View>
-        {/* Add the Logo here */}
+
         <View style={styles.logoContainer}>
-          <Image source={require('./logo/qpl.png')} style={styles.logo} />
+          <Image source={require("./logo/qpl.png")} style={styles.logo} />
         </View>
         <View style={styles.contentContainer}>
           <View style={styles.attendanceContainer}>
             <Text style={styles.infoText}>Current Date: {currentDate}</Text>
-            <Text style={styles.infoText}>Work Attendance: {totalAttendance || "N/A"}</Text>
+            
             <Text style={styles.infoText}>
               TIME IN:{" "}
               <Text style={styles.timeIn}>
@@ -182,11 +215,11 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 18, color: "red", textAlign: "center" },
   header: {
     padding: 20,
-    backgroundColor: '#FFA580',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#FFA580",
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
     shadowRadius: 4,
@@ -199,13 +232,13 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   logoContainer: {
-    alignItems: 'center', 
-    marginVertical: 20, 
+    alignItems: "center",
+    marginVertical: 20,
   },
   logo: {
-    width: 100, 
-    height: 100, 
-    resizeMode: 'contain',
+    width: 200,
+    height: 200,
+    resizeMode: "contain",
   },
   contentContainer: {
     flex: 1,
@@ -214,16 +247,16 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   attendanceContainer: {
-    backgroundColor: "#FFFFFF", 
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 20,
     width: "100%",
     borderWidth: 1,
-    borderColor: "#FF7F00", 
+    borderColor: "#FF7F00",
     shadowColor: "#FF7F00",
     shadowOpacity: 0.4,
     shadowRadius: 8,
-    elevation: 6, 
+    elevation: 6,
   },
   infoText: { fontSize: 18, color: "#333", marginBottom: 10 },
   timeIn: { color: "#4CAF50", fontWeight: "bold" },
